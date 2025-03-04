@@ -6,6 +6,9 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Controller
 public class ChatController {
 
@@ -23,8 +26,18 @@ public class ChatController {
             @Payload ChatMessage chatMessage,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        // Add username in web socket session
-        headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
+        // Ensure session attributes are initialized before use
+        Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
+        if (sessionAttributes == null) {
+            sessionAttributes = new HashMap<>(); // Initialize session attributes
+            headerAccessor.setSessionAttributes(sessionAttributes); // Set the new map
+        }
+
+        if (chatMessage.getSender() != null) { // ✅ Only add if sender is not null
+            sessionAttributes.put("username", chatMessage.getSender());
+        }
+
         return chatMessage;
     }
+
 }
